@@ -1,0 +1,1 @@
+rm -r db cross_compare testout output
