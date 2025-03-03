@@ -7,4 +7,3 @@ db/
 *.pyc
 testout/
 model_cache/
-newspaper_images/
