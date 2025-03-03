@@ -14,8 +14,9 @@ from config import IMAGE_FOLDER, BATCH_SIZE
 from logger_setup import logger
 from progress_tracker import load_progress, is_image_processed, mark_image_as_processed
 from image_utils import validate_image, get_image_paths
+from orientation_corrector import OrientationCorrector
 
-def process_image(embedder, collection, image_path):
+def process_image(embedder, collection, image_path, correct_orientation=True):
     """
     Process a single image and add its embedding to ChromaDB.
     
@@ -25,8 +26,20 @@ def process_image(embedder, collection, image_path):
     if not validate_image(image_path):
         logger.error(f"Skipping invalid image: {image_path}")
         return False
+    
+    # Apply orientation correction if enabled
+    oriented_path = image_path
+    if correct_orientation:
+        try:
+            corrector = OrientationCorrector(output_folder=None)  # In-place correction
+            oriented_path = corrector.correct_orientation(image_path)
+            logger.info(f"Orientation correction applied to {os.path.basename(image_path)}")
+        except Exception as e:
+            logger.error(f"Orientation correction failed for {image_path}: {str(e)}")
+            logger.info(f"Continuing with original image: {image_path}")
+            oriented_path = image_path
         
-    image_filename = os.path.basename(image_path)
+    image_filename = os.path.basename(oriented_path)
     image_id = f"image_{image_filename}"
     
     # Check if we've already processed this image in the database
@@ -56,7 +69,7 @@ def process_image(embedder, collection, image_path):
     # Generate embedding
     try:
         # Embed the image using the embedder
-        embedding_results = embedder.get_image_embeddings([image_path], is_query=False)
+        embedding_results = embedder.get_image_embeddings([oriented_path], is_query=False)
         
         if not embedding_results or embedding_results[0] is None:
             logger.error(f"Failed to generate embedding for {image_filename}")
@@ -67,7 +80,7 @@ def process_image(embedder, collection, image_path):
         # Create metadata
         metadata = {
             "image_name": image_filename,
-            "image_path": os.path.abspath(image_path),  # Use absolute path for reliability
+            "image_path": os.path.abspath(oriented_path),  # Use absolute path for reliability
             "processed_time": str(datetime.datetime.now()),
             "is_region": False  # Indicate this is a whole image, not a region
         }
@@ -100,7 +113,7 @@ def process_image(embedder, collection, image_path):
         logger.error(f"Error embedding/storing {image_filename}: {str(e)}")
         return False
 
-def process_image_batch(embedder, collection, batch_paths):
+def process_image_batch(embedder, collection, batch_paths, correct_orientation=True):
     """Process a batch of images and add their embeddings to ChromaDB."""
     # Filter out already processed images and invalid images
     valid_paths = []
@@ -120,6 +133,21 @@ def process_image_batch(embedder, collection, batch_paths):
     if not valid_paths:
         return 0
     
+    # Apply orientation correction if enabled
+    oriented_paths = valid_paths
+    if correct_orientation:
+        try:
+            corrector = OrientationCorrector(output_folder=None)  # In-place correction
+            oriented_paths = []
+            for path in valid_paths:
+                oriented_path = corrector.correct_orientation(path)
+                oriented_paths.append(oriented_path)
+                logger.debug(f"Orientation correction applied to {os.path.basename(path)}")
+        except Exception as e:
+            logger.error(f"Orientation correction failed for batch: {str(e)}")
+            logger.info(f"Continuing with original images")
+            oriented_paths = valid_paths
+    
     # Check which images are already in the database
     try:
         existing_items = collection.get(ids=image_ids, include=["embeddings"])
@@ -131,6 +159,8 @@ def process_image_batch(embedder, collection, batch_paths):
     # Filter out images already in database with valid embeddings
     to_process = []
     ids_to_process = []
+    paths_to_oriented = dict(zip(valid_paths, oriented_paths))
+    
     for i, image_path in enumerate(valid_paths):
         image_id = image_ids[i]
         image_filename = os.path.basename(image_path)
@@ -145,7 +175,7 @@ def process_image_batch(embedder, collection, batch_paths):
                 mark_image_as_processed(image_path)
                 continue
         
-        to_process.append(image_path)
+        to_process.append(paths_to_oriented[image_path])
         ids_to_process.append(image_id)
     
     if not to_process:
@@ -173,7 +203,8 @@ def process_image_batch(embedder, collection, batch_paths):
             metadata = {
                 "image_name": image_filename,
                 "image_path": os.path.abspath(image_path),  # Use absolute path for reliability
-                "processed_time": str(datetime.datetime.now())
+                "processed_time": str(datetime.datetime.now()),
+                "is_region": False  # Indicate this is a whole image, not a region
             }
             
             ids_list.append(image_id)
@@ -194,10 +225,12 @@ def process_image_batch(embedder, collection, batch_paths):
         
         logger.info(f" + Processed {len(ids_list)} images in batch")
         
-        # Mark as processed
-        for path in to_process:
-            if path in [to_process[i] for i in range(len(ids_list))]:
-                mark_image_as_processed(path)
+        # Mark as processed - use the original paths for the progress tracker
+        original_paths = list(paths_to_oriented.keys())
+        for path in original_paths:
+            for i, processed_path in enumerate(to_process):
+                if paths_to_oriented[path] == processed_path and i < len(ids_list):
+                    mark_image_as_processed(path)
             
         return len(ids_list)
         
@@ -205,7 +238,7 @@ def process_image_batch(embedder, collection, batch_paths):
         logger.error(f"Error processing batch: {str(e)}")
         return 0
 
-def process_images(image_paths, embedder, collection):
+def process_images(image_paths, embedder, collection, correct_orientation=True):
     """Process images and generate embeddings for each, using batch processing for efficiency."""
     # Count total images and completed images
     total_images = len(image_paths)
@@ -227,8 +260,8 @@ def process_images(image_paths, embedder, collection):
             # Count already processed in this batch
             already_processed = sum(1 for img in batch if is_image_processed(img))
             
-            # Process batch
-            newly_processed = process_image_batch(embedder, collection, batch)
+            # Process batch with orientation correction
+            newly_processed = process_image_batch(embedder, collection, batch, correct_orientation=correct_orientation)
             successfully_processed += newly_processed
             
             # Update progress bar

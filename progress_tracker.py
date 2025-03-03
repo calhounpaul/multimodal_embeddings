@@ -202,3 +202,41 @@ def is_region_comparison_completed(region_id):
     """Check if comparisons have already been done for a specific region."""
     progress = load_region_comparison_progress()
     return region_id in progress["completed_comparisons"]
+
+################################################################################
+# Orientation Correction Progress Tracking
+################################################################################
+
+def load_orientation_progress():
+    """Load the orientation correction progress from a JSON file."""
+    if os.path.exists(ORIENTATION_PROGRESS_FILE):
+        try:
+            with open(ORIENTATION_PROGRESS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Error loading orientation progress file: {str(e)}")
+            return {"corrected_images": []}
+    return {"corrected_images": []}
+
+def save_orientation_progress(progress_data):
+    """Save the orientation correction progress to a JSON file."""
+    os.makedirs(os.path.dirname(ORIENTATION_PROGRESS_FILE), exist_ok=True)
+    
+    try:
+        with open(ORIENTATION_PROGRESS_FILE, 'w') as f:
+            json.dump(progress_data, f)
+    except Exception as e:
+        logger.error(f"Error saving orientation progress file: {str(e)}")
+
+def mark_orientation_as_completed(image_path):
+    """Mark a specific image as having completed orientation correction."""
+    progress = load_orientation_progress()
+    
+    if image_path not in progress["corrected_images"]:
+        progress["corrected_images"].append(image_path)
+        save_orientation_progress(progress)
+
+def is_orientation_completed(image_path):
+    """Check if orientation correction has already been done for a specific image."""
+    progress = load_orientation_progress()
+    return image_path in progress["corrected_images"]

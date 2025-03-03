@@ -9,3 +9,5 @@ doclayout-yolo
 huggingface_hub>=0.21.0
 numpy
 scikit-learn
+pytesseract
+imutils

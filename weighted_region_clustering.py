@@ -9,6 +9,7 @@ import os
 import json
 import datetime
 import numpy as np
+import logging
 from collections import defaultdict
 from tqdm import tqdm
 import argparse
@@ -69,19 +70,34 @@ def is_clustering_completed(image_pair):
     progress = load_clustering_progress()
     return image_pair in progress["completed_comparisons"]
 
-def compute_image_similarity_matrix(collection, image_paths, similarity_threshold=REGION_SIMILARITY_THRESHOLD):
+def safe_query(collection, query_embedding, n_results, where_clause, max_retries=3):
+    """
+    Safely perform a query with retries and error handling.
+    """
+    for attempt in range(max_retries):
+        try:
+            results = collection.query(
+                query_embeddings=[query_embedding],
+                n_results=n_results,
+                include=["metadatas", "documents", "distances"],
+                where=where_clause
+            )
+            return results
+        except RuntimeError as e:
+            if "Cannot return the results in a contigious 2D array" in str(e):
+                logger.warning(f"Query failed (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                if attempt < max_retries - 1:
+                    # Reduce the number of results requested
+                    n_results = max(1, int(n_results * 0.8))
+                    logger.info(f"Retrying with reduced n_results={n_results}")
+                    continue
+            raise
+    return None
+
+def compute_image_similarity_matrix(collection, image_paths, similarity_threshold=REGION_SIMILARITY_THRESHOLD, skip_same_prefix=True, prefix_length=20):
     """
     Compute a similarity matrix between all pairs of newspaper images based on
     the similarity of their sub-regions, weighted by region area.
-    
-    Args:
-        collection: ChromaDB collection containing region embeddings
-        image_paths: List of paths to newspaper images
-        similarity_threshold: Minimum similarity score to consider two regions as related
-        
-    Returns:
-        numpy.ndarray: Similarity matrix between all pairs of images
-        list: Image names corresponding to matrix rows/columns
     """
     # Initialize variables
     image_names = [os.path.basename(path) for path in image_paths]
@@ -94,10 +110,10 @@ def compute_image_similarity_matrix(collection, image_paths, similarity_threshol
     # Get all image regions from the database
     all_entries = collection.get(
         include=["metadatas", "embeddings"],
-        where={"is_region": {"$eq": True}}  # Only include regions
+        where={"is_region": {"$eq": True}}
     )
     
-    if not all_entries or "ids" not in all_entries or not all_entries["ids"]:
+    if not all_entries or len(all_entries["metadatas"]) == 0:
         logger.warning("No regions found in the database. Make sure regions have been processed first.")
         return None, None
     
@@ -105,12 +121,13 @@ def compute_image_similarity_matrix(collection, image_paths, similarity_threshol
     image_to_regions = defaultdict(list)
     region_embeddings = {}
     region_areas = {}
+    region_types = {}
     
     for i, region_id in enumerate(all_entries["ids"]):
         metadata = all_entries["metadatas"][i]
         embedding = all_entries["embeddings"][i]
         
-        if metadata and embedding:
+        if metadata and embedding is not None and len(embedding) > 0:
             parent_image = metadata.get("parent_image_name")
             area_percentage = metadata.get("area_percentage", 0)
             region_type = metadata.get("region_type")
@@ -118,28 +135,55 @@ def compute_image_similarity_matrix(collection, image_paths, similarity_threshol
             if parent_image and area_percentage > 0 and region_type in REGION_TYPES_TO_PROCESS:
                 image_to_regions[parent_image].append(region_id)
                 region_embeddings[region_id] = embedding
-                region_areas[region_id] = area_percentage / 100.0  # Convert to fraction
+                region_areas[region_id] = area_percentage / 100.0
+                region_types[region_id] = region_type
     
     # Compute cross-image region similarities
     logger.info("Computing cross-image region similarities...")
     
-    # For each pair of images
     total_pairs = (n_images * (n_images - 1)) // 2
     
+    # Calculate the total number of regions for logging
+    total_regions = sum(len(regions) for regions in image_to_regions.values())
+    logger.info(f"Found {total_regions} regions across {n_images} images")
+    
+    # Set a VERY permissive threshold for initial clustering - try to find ANY connections
+    effective_threshold = 0.1  # Much more permissive than default (0.7)
+    logger.info(f"Using similarity threshold: {effective_threshold} (original: {similarity_threshold})")
+
+    # Track statistics for debugging
+    total_comparisons = 0
+    passing_comparisons = 0
+    region_matches_by_pair = defaultdict(int)
+    distance_values = []  # For diagnostic histogram of distances
+    
     with tqdm(total=total_pairs, desc="Computing image similarities") as pbar:
+        # Process each image pair
         for i in range(n_images):
             img_i = image_names[i]
             regions_i = image_to_regions.get(img_i, [])
             
             if not regions_i:
+                logger.debug(f"Image {img_i} has no regions, skipping")
                 continue
                 
-            for j in range(i+1, n_images):
+            for j in range(i+1, n_images):  # Only compute upper triangle to avoid duplicates
                 img_j = image_names[j]
                 regions_j = image_to_regions.get(img_j, [])
                 
                 if not regions_j:
+                    logger.debug(f"Image {img_j} has no regions, skipping")
                     continue
+                
+                # Skip pairs with same prefix if enabled
+                if skip_same_prefix:
+                    source_prefix = img_i[:min(prefix_length, len(img_i))]
+                    target_prefix = img_j[:min(prefix_length, len(img_j))]
+                    
+                    if source_prefix == target_prefix:
+                        logger.debug(f" - Skipping comparison between {img_i} and {img_j} - identical prefix '{source_prefix}'")
+                        pbar.update(1)
+                        continue
                 
                 # Check if this pair has already been processed
                 pair_key = f"{img_i}_{img_j}"
@@ -149,134 +193,65 @@ def compute_image_similarity_matrix(collection, image_paths, similarity_threshol
                 
                 # For each region in image i, find its similarity to all regions in image j
                 weighted_similarities = []
+                pair_distances = []  # Track distances for this pair
                 
-                for region_i in regions_i:
+                # Process similar regions
+                for region_i in regions_i[:10]:  # Limit to first 10 regions for performance
                     embedding_i = region_embeddings.get(region_i)
                     area_i = region_areas.get(region_i, 0)
                     
-                    if embedding_i is None or area_i == 0:
+                    if embedding_i is None or len(embedding_i) == 0 or area_i == 0:
                         continue
                     
-                    # Query for similar regions from image j
-                    results = collection.query(
-                        query_embeddings=[embedding_i],
-                        n_results=len(regions_j),
-                        include=["metadatas", "distances"],
-                        where={"parent_image_name": {"$eq": img_j}}
+                    # Use safe_query instead of direct collection.query
+                    results = safe_query(
+                        collection,
+                        embedding_i,
+                        n_results=min(10, len(regions_j)),
+                        where_clause={"parent_image_name": {"$eq": img_j}}
                     )
                     
-                    if not results or "ids" not in results or not results["ids"][0]:
+                    if not results:
                         continue
-                    
-                    # Calculate weighted similarities
-                    for k, (region_j, distance) in enumerate(zip(results["ids"][0], results["distances"][0])):
-                        metadata_j = results["metadatas"][0][k]
-                        area_j = metadata_j.get("area_percentage", 0) / 100.0
                         
-                        if distance >= similarity_threshold and area_j > 0:
-                            # Weight by product of areas (geometric mean)
-                            # This weights more heavily relationships between large regions
-                            weighted_similarity = (1.0 - distance) * area_i * area_j
-                            weighted_similarities.append(weighted_similarity)
+                    # Process results
+                    for k, distance in enumerate(results["distances"][0]):
+                        if "metadatas" in results and k < len(results["metadatas"][0]):
+                            metadata_j = results["metadatas"][0][k]
+                            area_j = metadata_j.get("area_percentage", 0) / 100.0
+                            
+                            if distance <= (1.0 - effective_threshold) and area_j > 0:
+                                similarity_score = 1.0 - distance
+                                weighted_similarity = similarity_score * area_i * area_j
+                                weighted_similarities.append(weighted_similarity)
+                                passing_comparisons += 1
+                                region_matches_by_pair[pair_key] += 1
                 
                 # Compute overall weighted similarity between the two images
                 if weighted_similarities:
-                    # Sum of weighted similarities (higher is more similar)
                     similarity_score = np.sum(weighted_similarities)
-                    
-                    # Store in the similarity matrix
                     similarity_matrix[i, j] = similarity_score
-                    similarity_matrix[j, i] = similarity_score  # Symmetrical
+                    similarity_matrix[j, i] = similarity_score  # Make matrix symmetric
+                    
+                    logger.info(f"Similarity between {img_i} and {img_j}: {similarity_score:.6f} " +
+                              f"(based on {len(weighted_similarities)} matching region pairs)")
+                else:
+                    logger.debug(f"No similar regions found between {img_i} and {img_j}")
                 
                 # Mark pair as completed
                 mark_clustering_as_completed(pair_key)
                 pbar.update(1)
     
-    # Normalize similarity matrix
-    if np.max(similarity_matrix) > 0:
-        similarity_matrix = similarity_matrix / np.max(similarity_matrix)
+    # Normalize similarity matrix (excluding diagonal)
+    max_non_diagonal = np.max(similarity_matrix - np.diag(np.diag(similarity_matrix)))
+    if max_non_diagonal > 0:
+        non_diag_mask = ~np.eye(n_images, dtype=bool)
+        similarity_matrix[non_diag_mask] = similarity_matrix[non_diag_mask] / max_non_diagonal
+    
+    # Set diagonal to 1.0 (self-similarity)
+    np.fill_diagonal(similarity_matrix, 1.0)
     
     return similarity_matrix, image_names
-
-def cluster_images(similarity_matrix, image_names, n_clusters=None):
-    """
-    Cluster newspaper images based on their similarity matrix.
-    
-    Args:
-        similarity_matrix: Similarity matrix between all pairs of images
-        image_names: List of image names corresponding to matrix rows/columns
-        n_clusters: Number of clusters to form (if None, determined automatically)
-        
-    Returns:
-        dict: Clustering results
-    """
-    # Convert similarity to distance (1 - similarity)
-    distance_matrix = 1.0 - similarity_matrix
-    
-    # Apply hierarchical clustering
-    logger.info("Applying hierarchical clustering...")
-    
-    # If n_clusters is None, determine it automatically based on the distance matrix
-    if n_clusters is None:
-        # Use the elbow method or silhouette score to determine optimal number of clusters
-        from sklearn.metrics import silhouette_score
-        
-        max_clusters = min(10, len(image_names))
-        best_score = -1
-        best_n_clusters = 2  # Default to at least 2 clusters
-        
-        for k in range(2, max_clusters + 1):
-            try:
-                clustering = AgglomerativeClustering(
-                    n_clusters=k,
-                    affinity='precomputed',
-                    linkage='average'
-                ).fit(distance_matrix)
-                
-                if len(np.unique(clustering.labels_)) > 1:  # Only calculate if there are at least 2 clusters
-                    score = silhouette_score(distance_matrix, clustering.labels_, metric='precomputed')
-                    
-                    if score > best_score:
-                        best_score = score
-                        best_n_clusters = k
-            except Exception as e:
-                logger.warning(f"Error computing silhouette score for k={k}: {str(e)}")
-        
-        n_clusters = best_n_clusters
-        logger.info(f"Automatically determined optimal number of clusters: {n_clusters}")
-    
-    # Perform final clustering
-    clustering = AgglomerativeClustering(
-        n_clusters=n_clusters,
-        affinity='precomputed',
-        linkage='average'
-    ).fit(distance_matrix)
-    
-    # Group images by cluster
-    clusters = defaultdict(list)
-    for i, label in enumerate(clustering.labels_):
-        clusters[int(label)].append(image_names[i])
-    
-    # Calculate intra-cluster similarity (cohesion)
-    cluster_cohesion = {}
-    for label, images in clusters.items():
-        indices = [image_names.index(img) for img in images]
-        if len(indices) > 1:
-            # Extract the submatrix for this cluster
-            submatrix = similarity_matrix[np.ix_(indices, indices)]
-            # Average similarity excluding self-similarity
-            mask = ~np.eye(submatrix.shape[0], dtype=bool)
-            cohesion = np.mean(submatrix[mask]) if np.any(mask) else 0
-            cluster_cohesion[label] = float(cohesion)
-        else:
-            cluster_cohesion[label] = 0.0
-    
-    return {
-        "n_clusters": n_clusters,
-        "clusters": {str(k): v for k, v in clusters.items()},
-        "cluster_cohesion": cluster_cohesion,
-        "labels": clustering.labels_.tolist()
-    }
 
 def plot_similarity_heatmap(similarity_matrix, image_names, output_path=None):
     """
@@ -287,10 +262,17 @@ def plot_similarity_heatmap(similarity_matrix, image_names, output_path=None):
         image_names: List of image names corresponding to matrix rows/columns
         output_path: Path to save the plot
     """
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(14, 12))
     
-    # Create heatmap
-    plt.imshow(similarity_matrix, cmap="viridis", interpolation="nearest")
+    # Create heatmap with modified colormap to highlight non-zero values
+    cmap = plt.cm.viridis.copy()
+    cmap.set_under('black')  # Values below vmin will be black
+    
+    # Calculate a small positive value for vmin (to separate zeros from small similarities)
+    min_nonzero = similarity_matrix[similarity_matrix > 0].min() if np.any(similarity_matrix > 0) else 0.01
+    vmin = min(0.01, min_nonzero / 2)
+    
+    plt.imshow(similarity_matrix, cmap=cmap, interpolation="nearest", vmin=vmin)
     
     # Add colorbar and labels
     plt.colorbar(label="Similarity Score")
@@ -330,7 +312,7 @@ def plot_dendrogram(similarity_matrix, image_names, output_path=None):
     Z = linkage(distance_matrix, method='average')
     
     # Plot dendrogram
-    plt.figure(figsize=(14, 8))
+    plt.figure(figsize=(16, 10))
     
     # Create shortened names for readability
     short_names = [name[:15] + "..." if len(name) > 18 else name for name in image_names]
@@ -368,6 +350,25 @@ def plot_similarity_network(similarity_matrix, image_names, threshold=0.3, outpu
         threshold: Minimum similarity to include an edge
         output_path: Path to save the plot
     """
+    # For sparse data, use a lower threshold to ensure some connections are shown
+    min_edge_count = 3  # Minimum number of edges we want to see
+    
+    # Dynamically adjust threshold if needed
+    sim_values = similarity_matrix[~np.eye(similarity_matrix.shape[0], dtype=bool)]  # Get non-diagonal values
+    sim_values = sim_values[sim_values > 0]  # Only consider non-zero similarities
+    
+    if len(sim_values) < min_edge_count:
+        # Not enough connections even at the lowest threshold
+        logger.warning(f"Very few connections in the similarity network (only {len(sim_values)} non-zero values)")
+        # Use a very low threshold to show whatever connections exist
+        threshold = 0.01 if len(sim_values) > 0 else 0
+    elif np.sum(sim_values > threshold) < min_edge_count:
+        # Lower the threshold to get at least min_edge_count connections
+        if len(sim_values) >= min_edge_count:
+            # Sort similarities and pick the threshold that gives us min_edge_count connections
+            threshold = sorted(sim_values, reverse=True)[min(min_edge_count, len(sim_values))-1]
+            logger.info(f"Adjusted network threshold to {threshold:.4f} to show at least {min_edge_count} connections")
+    
     # Create graph
     G = nx.Graph()
     
@@ -378,28 +379,63 @@ def plot_similarity_network(similarity_matrix, image_names, threshold=0.3, outpu
         G.add_node(i, name=short_name)
     
     # Add edges
+    edges_added = 0
     for i in range(len(image_names)):
         for j in range(i+1, len(image_names)):
             similarity = similarity_matrix[i, j]
             if similarity > threshold:
                 G.add_edge(i, j, weight=similarity)
+                edges_added += 1
+    
+    logger.info(f"Created network with {len(image_names)} nodes and {edges_added} edges (threshold: {threshold:.4f})")
     
     # Create the plot
-    plt.figure(figsize=(12, 12))
+    plt.figure(figsize=(14, 14))
     
     # Position nodes using force-directed layout
-    pos = nx.spring_layout(G, k=0.3, iterations=50, seed=42)
+    # Adjust k based on number of nodes to avoid overcrowding
+    k_value = 0.3 + (0.5 / max(1, len(image_names)/10))
+    pos = nx.spring_layout(G, k=k_value, iterations=100, seed=42)
+    
+    # Calculate node degrees AFTER adding all edges
+    node_degrees = dict(G.degree())
+    node_sizes = [300 + 100*node_degrees.get(n, 0) for n in G.nodes()]
+    node_colors = [node_degrees.get(n, 0) for n in G.nodes()]
     
     # Draw nodes
-    nx.draw_networkx_nodes(G, pos, node_size=500, alpha=0.8)
+    nodes = nx.draw_networkx_nodes(
+        G, pos, 
+        node_size=node_sizes, 
+        node_color=node_colors,
+        cmap=plt.cm.viridis,
+        alpha=0.8
+    )
     
     # Draw edges with width proportional to similarity
-    edges = G.edges()
-    weights = [G[u][v]["weight"] * 5 for u, v in edges]  # Scale for visibility
-    nx.draw_networkx_edges(G, pos, edgelist=edges, width=weights, alpha=0.5)
+    if edges_added > 0:
+        edges = G.edges()
+        weights = [G[u][v]["weight"] * 5 for u, v in edges]  # Scale for visibility
+        nx.draw_networkx_edges(G, pos, edgelist=edges, width=weights, alpha=0.5)
     
-    # Draw node labels
-    nx.draw_networkx_labels(G, pos, labels=nx.get_node_attributes(G, "name"), font_size=8)
+    # Draw node labels with size based on degree
+    label_sizes = {n: 8 + min(4, node_degrees.get(n, 0)) for n in G.nodes()}
+    nx.draw_networkx_labels(
+        G, pos, 
+        labels=nx.get_node_attributes(G, "name"), 
+        font_size=10,
+        font_weight='bold'
+    )
+    
+    # Add a colorbar only if we have nodes with connections
+    if edges_added > 0 and len(node_colors) > 0 and max(node_colors) > 0:
+        # Create a custom axis for the colorbar
+        plt.subplots_adjust(right=0.85)  # Make room for colorbar on right
+        cbar_ax = plt.axes([0.88, 0.1, 0.03, 0.8])  # [left, bottom, width, height]
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(min(node_colors), max(node_colors)))
+        sm.set_array([])
+        plt.colorbar(sm, cax=cbar_ax, label="Node Degree (Number of Connections)")
+    else:
+        logger.info("No nodes with connections to display in colorbar")
     
     plt.title("Newspaper Similarity Network")
     plt.axis("off")
@@ -412,6 +448,130 @@ def plot_similarity_network(similarity_matrix, image_names, threshold=0.3, outpu
         logger.info(f"Saved similarity network to {output_path}")
     else:
         plt.show()
+
+def cluster_images(similarity_matrix, image_names, n_clusters=None):
+    """
+    Cluster newspaper images based on their similarity matrix.
+    """
+    # Ensure diagonal is 1.0 (self-similarity)
+    np.fill_diagonal(similarity_matrix, 1.0)
+    
+    # Convert similarity to distance
+    distance_matrix = 1.0 - similarity_matrix
+    
+    # Validate distance matrix
+    if not isinstance(distance_matrix, np.ndarray) or distance_matrix.size == 0:
+        logger.error("Distance matrix is not a valid numpy array")
+        return None
+    
+    if distance_matrix.shape[0] != distance_matrix.shape[1]:
+        logger.error("Distance matrix is not square")
+        return None
+    
+    if np.any(np.isnan(distance_matrix)):
+        logger.error("Distance matrix contains NaN values")
+        return None
+    
+    # Apply hierarchical clustering
+    logger.info("Applying hierarchical clustering...")
+    
+    try:
+        # If n_clusters is None, determine it automatically
+        if n_clusters is None:
+            # Count number of non-zero similarities
+            nonzero_pairs = np.sum(similarity_matrix > 0.01) - similarity_matrix.shape[0]  # Exclude diagonal
+            logger.info(f"Number of image pairs with non-zero similarity: {nonzero_pairs // 2}")  # Divide by 2 because matrix is symmetric
+            
+            # If there are very few connections, don't try to create too many clusters
+            if nonzero_pairs < 10:
+                max_clusters = min(3, len(image_names))
+                logger.info(f"Few connections detected, limiting to max {max_clusters} clusters")
+            else:
+                max_clusters = min(10, len(image_names))
+            
+            best_score = -1
+            best_n_clusters = 2
+            
+            for k in range(2, max_clusters + 1):
+                # Check scikit-learn version and use appropriate parameters
+                try:
+                    # Try modern scikit-learn API first
+                    clustering = AgglomerativeClustering(
+                        n_clusters=k,
+                        affinity='precomputed',
+                        linkage='average'
+                    ).fit(distance_matrix)
+                except TypeError:
+                    # Fall back to older scikit-learn API
+                    clustering = AgglomerativeClustering(
+                        n_clusters=k,
+                        linkage='average'
+                    ).fit(distance_matrix)
+                
+                unique_labels = np.unique(clustering.labels_)
+                if len(unique_labels) > 1:
+                    from sklearn.metrics import silhouette_score
+                    try:
+                        score = silhouette_score(distance_matrix, clustering.labels_, metric='precomputed')
+                        
+                        if score > best_score:
+                            best_score = score
+                            best_n_clusters = k
+                            logger.info(f"Testing {k} clusters: silhouette score = {score:.4f} (new best)")
+                        else:
+                            logger.info(f"Testing {k} clusters: silhouette score = {score:.4f}")
+                    except Exception as e:
+                        logger.warning(f"Error calculating silhouette score for k={k}: {e}")
+                        continue
+            
+            n_clusters = best_n_clusters
+            logger.info(f"Automatically determined optimal number of clusters: {n_clusters} (score: {best_score:.4f})")
+        
+        # Perform final clustering
+        try:
+            # Try modern scikit-learn API first
+            clustering = AgglomerativeClustering(
+                n_clusters=n_clusters,
+                affinity='precomputed',
+                linkage='average'
+            ).fit(distance_matrix)
+        except TypeError:
+            # Fall back to older scikit-learn API
+            clustering = AgglomerativeClustering(
+                n_clusters=n_clusters,
+                linkage='average'
+            ).fit(distance_matrix)
+        
+        # Group images by cluster
+        clusters = defaultdict(list)
+        for i, label in enumerate(clustering.labels_):
+            clusters[int(label)].append(image_names[i])
+        
+        # Calculate intra-cluster similarity (cohesion)
+        cluster_cohesion = {}
+        for label, images in clusters.items():
+            indices = [image_names.index(img) for img in images]
+            if len(indices) > 1:
+                submatrix = similarity_matrix[np.ix_(indices, indices)]
+                # Extract off-diagonal elements only
+                mask = ~np.eye(submatrix.shape[0], dtype=bool)
+                avg_similarity = np.mean(submatrix[mask]) if np.any(mask) else 0
+                cluster_cohesion[label] = float(avg_similarity)
+            else:
+                cluster_cohesion[label] = 0.0
+        
+        return {
+            "n_clusters": n_clusters,
+            "clusters": {str(k): v for k, v in clusters.items()},
+            "cluster_cohesion": cluster_cohesion,
+            "labels": clustering.labels_.tolist()
+        }
+    
+    except Exception as e:
+        logger.error(f"Error during clustering: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return None
 
 def create_html_report(similarity_matrix, image_names, clustering_results, html_dir):
     """
@@ -436,7 +596,7 @@ def create_html_report(similarity_matrix, image_names, clustering_results, html_
     
     plot_similarity_heatmap(similarity_matrix, image_names, heatmap_path)
     plot_dendrogram(similarity_matrix, image_names, dendrogram_path)
-    plot_similarity_network(similarity_matrix, image_names, threshold=0.3, output_path=network_path)
+    plot_similarity_network(similarity_matrix, image_names, threshold=0.1, output_path=network_path)
     
     # Create index.html
     index_path = os.path.join(html_dir, "index.html")
@@ -464,6 +624,8 @@ def create_html_report(similarity_matrix, image_names, clustering_results, html_
         th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
         th {{ background-color: #f2f2f2; }}
         tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        .highlight {{ background-color: #fffacd; }}
+        .stats {{ background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0; }}
     </style>
 </head>
 <body>
@@ -473,6 +635,13 @@ def create_html_report(similarity_matrix, image_names, clustering_results, html_
         <p>Number of newspapers analyzed: {len(image_names)}</p>
         <p>Number of clusters: {clustering_results["n_clusters"]}</p>
         <p>Generated on: {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+    </div>
+    
+    <div class="stats">
+        <h2>Similarity Statistics</h2>
+        <p>Non-zero similarity pairs: {np.sum(similarity_matrix > 0.01) - len(image_names)}</p>
+        <p>Average non-zero similarity: {np.mean(similarity_matrix[similarity_matrix > 0.01]):.4f}</p>
+        <p>Max similarity between different images: {np.max(similarity_matrix - np.diag(np.diag(similarity_matrix))):.4f}</p>
     </div>
     
     <div class="section">
@@ -542,6 +711,50 @@ def create_html_report(similarity_matrix, image_names, clustering_results, html_
     </div>
     
     <div class="section">
+        <h2>Top Similarities</h2>
+        <table>
+            <tr>
+                <th>Newspaper 1</th>
+                <th>Newspaper 2</th>
+                <th>Similarity</th>
+            </tr>
+""")
+        
+        # Get all non-diagonal pairs, sorted by similarity
+        pairs = []
+        for i in range(len(image_names)):
+            for j in range(i+1, len(image_names)):
+                if similarity_matrix[i, j] > 0:
+                    pairs.append((image_names[i], image_names[j], similarity_matrix[i, j]))
+        
+        # Sort by similarity (descending)
+        pairs.sort(key=lambda x: x[2], reverse=True)
+        
+        # Show top 50 pairs or all if less
+        top_pairs = pairs[:min(50, len(pairs))]
+        
+        for paper1, paper2, sim in top_pairs:
+            highlight = " class='highlight'" if sim > 0.5 else ""
+            f.write(f"""
+            <tr{highlight}>
+                <td>{paper1}</td>
+                <td>{paper2}</td>
+                <td>{sim:.4f}</td>
+            </tr>
+""")
+        
+        if not top_pairs:
+            f.write("""
+            <tr>
+                <td colspan="3">No similarities found between different newspapers</td>
+            </tr>
+""")
+        
+        f.write("""
+        </table>
+    </div>
+    
+    <div class="section">
         <h2>Similarity Matrix</h2>
         <table>
             <tr>
@@ -563,7 +776,11 @@ def create_html_report(similarity_matrix, image_names, clustering_results, html_
             for j in range(len(image_names)):
                 similarity = similarity_matrix[i, j]
                 # Color cell based on similarity (darker = more similar)
-                bg_color = f"rgba(0, 100, 255, {similarity:.2f})"
+                # Use a different color for diagonal (self-similarity)
+                if i == j:
+                    bg_color = "#e6e6e6"  # Light gray for diagonal
+                else:
+                    bg_color = f"rgba(0, 100, 255, {similarity:.2f})"
                 f.write(f'<td style="background-color: {bg_color};">{similarity:.3f}</td>')
             
             f.write("</tr>")
@@ -586,20 +803,44 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Newspaper Image Clustering')
     parser.add_argument('--n-clusters', type=int, default=None, help='Number of clusters to form (default: automatic)')
-    parser.add_argument('--similarity-threshold', type=float, default=REGION_SIMILARITY_THRESHOLD, 
-                        help='Minimum similarity score to consider regions as related')
+    parser.add_argument('--similarity-threshold', type=float, default=0.1, 
+                        help='Minimum similarity score to consider regions as related (default: 0.1)')
     parser.add_argument('--no-html', action='store_true', help='Skip HTML report generation')
+    parser.add_argument('--reset', action='store_true', help='Reset progress and start fresh')
+    parser.add_argument('--diagnostic', action='store_true', help='Run in diagnostic mode with detailed logging')
+    parser.add_argument('--include-same-prefix', action='store_true', 
+                        help='Include comparisons between files with identical prefixes (default: exclude)')
+    parser.add_argument('--prefix-length', type=int, default=20,
+                        help='Number of characters to use for prefix matching (default: 20)')
     
     args = parser.parse_args()
+    
+    # Set up detailed logging if diagnostic mode is enabled
+    if args.diagnostic:
+        logger.setLevel(logging.DEBUG)
+        for handler in logger.handlers:
+            handler.setLevel(logging.DEBUG)
+        logger.info("Running in diagnostic mode with detailed logging")
     
     n_clusters = args.n_clusters
     similarity_threshold = args.similarity_threshold
     generate_html = not args.no_html
+    reset_progress = args.reset
+    skip_same_prefix = not args.include_same_prefix
+    prefix_length = args.prefix_length
     
     logger.info("Starting newspaper image weighted clustering")
+    logger.info(f"Skip same prefix: {skip_same_prefix} (prefix length: {prefix_length})")
     
     # Create necessary directories
     os.makedirs(WEIGHTED_CLUSTERING_FOLDER, exist_ok=True)
+    
+    # Reset progress if requested
+    if reset_progress:
+        logger.info("Resetting clustering progress as requested")
+        if os.path.exists(WEIGHTED_CLUSTERING_PROGRESS_FILE):
+            os.remove(WEIGHTED_CLUSTERING_PROGRESS_FILE)
+        save_clustering_progress({"completed_comparisons": []})
     
     # Initialize database connection
     chroma_client, collection = initialize_db()
@@ -611,17 +852,19 @@ def main():
         logger.error(f"No image files found in {IMAGE_FOLDER}. Exiting.")
         return
     
-    logger.info(f"Found {len(image_paths)} newspaper images to analyze")
+    logger.info(f"Found {len(image_paths)} image files in {IMAGE_FOLDER}")
     
     # Compute image similarity matrix
     similarity_matrix, image_names = compute_image_similarity_matrix(
         collection, 
         image_paths,
-        similarity_threshold=similarity_threshold
+        similarity_threshold=similarity_threshold,
+        skip_same_prefix=skip_same_prefix,
+        prefix_length=prefix_length
     )
     
-    if similarity_matrix is None or image_names is None:
-        logger.error("Failed to compute similarity matrix. Exiting.")
+    if similarity_matrix is None or similarity_matrix.size == 0 or image_names is None or len(image_names) == 0:
+        logger.error("Failed to compute valid similarity matrix or image names. Exiting.")
         return
     
     # Save similarity matrix for future use
@@ -636,6 +879,10 @@ def main():
     
     # Cluster images
     clustering_results = cluster_images(similarity_matrix, image_names, n_clusters=n_clusters)
+    
+    if clustering_results is None:
+        logger.error("Clustering failed. Exiting.")
+        return
     
     # Save clustering results
     clustering_path = os.path.join(WEIGHTED_CLUSTERING_FOLDER, "clustering_results.json")
@@ -664,7 +911,7 @@ def main():
     plot_similarity_network(
         similarity_matrix, 
         image_names, 
-        threshold=0.3,
+        threshold=0.1,  # Lower threshold to show more connections
         output_path=os.path.join(plots_dir, "similarity_network.png")
     )
     

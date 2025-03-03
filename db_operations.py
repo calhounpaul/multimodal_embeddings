@@ -8,6 +8,7 @@ import os
 import datetime
 import chromadb
 from chromadb.config import Settings
+from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
 from config import DB_FOLDER, COLLECTION_NAME
 from logger_setup import logger
@@ -16,19 +17,48 @@ from progress_tracker import mark_image_as_processed, is_image_processed
 def initialize_db():
     """
     Initialize ChromaDB and return the client and collection.
+    Configure HNSW parameters for better performance with large datasets.
     
     Returns:
         Tuple of (chroma_client, collection)
     """
     logger.info("Initializing ChromaDB (persistent mode)...")
-    chroma_client = chromadb.PersistentClient(path=DB_FOLDER, settings=Settings(anonymized_telemetry=False))
+    
+    # Configure HNSW parameters as individual metadata fields
+    hnsw_config = {
+        "hnsw_space": "cosine",  # Use cosine similarity
+        "hnsw_M": "32",          # Higher M for better recall
+        "hnsw_ef_construction": "200",  # Higher ef_construction for better index quality
+        "hnsw_ef": "200"        # Higher ef for better search quality
+    }
+    
+    chroma_client = chromadb.PersistentClient(
+        path=DB_FOLDER, 
+        settings=Settings(
+            anonymized_telemetry=False,
+            allow_reset=True
+        )
+    )
     
     try:
-        collection = chroma_client.get_collection(name=COLLECTION_NAME)
+        collection = chroma_client.get_collection(
+            name=COLLECTION_NAME,
+            embedding_function=DefaultEmbeddingFunction()
+        )
+        
+        # Update metadata with HNSW parameters if they don't exist
+        current_metadata = collection.metadata or {}
+        updated_metadata = {**current_metadata, **hnsw_config}
+        collection.modify(metadata=updated_metadata)
+        
         logger.info(f"Collection '{COLLECTION_NAME}' found in ChromaDB.")
     except Exception:
         logger.info(f"Creating collection '{COLLECTION_NAME}' in ChromaDB...")
-        collection = chroma_client.create_collection(name=COLLECTION_NAME)
+        collection = chroma_client.create_collection(
+            name=COLLECTION_NAME,
+            embedding_function=DefaultEmbeddingFunction(),
+            metadata=hnsw_config
+        )
     
     return chroma_client, collection
 

@@ -48,8 +48,8 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 # Set to None to use all available GPUs, or specify a number
 GPU_COUNT = None  # Using None will default to using all available GPUs
 # Number of images to process in each batch
-BATCH_SIZE = 8  # Adjust based on available GPU memory
-REGION_BATCH_SIZE = 24  # Regions are typically smaller, so we can process more at once
+BATCH_SIZE = 16  # Adjust based on available GPU memory
+REGION_BATCH_SIZE = 48  # Regions are typically smaller, so we can process more at once
 
 # Database
 COLLECTION_NAME = "newspaper_image_embeddings"
@@ -59,7 +59,7 @@ DEFAULT_MODEL_NAME = "intfloat/mmE5-mllama-11b-instruct"
 
 # DocLayout settings
 # Model will be downloaded from Hugging Face hub
-DOCLAYOUT_CONF_THRESHOLD = 0.25  # Confidence threshold for region detection
+DOCLAYOUT_CONF_THRESHOLD = 0.10  # Confidence threshold for region detection
 DOCLAYOUT_IOU_THRESHOLD = 0.45   # IoU threshold for NMS
 DOCLAYOUT_IMAGE_SIZE = 1024      # Input image size for the YOLO model
 
@@ -75,5 +75,10 @@ REGION_TYPES_TO_PROCESS = [
 
 # Region comparison settings
 REGION_COMPARE_TOP_N = 10        # Number of similar regions to find for each region
-REGION_SIMILARITY_THRESHOLD = 0.7 # Minimum similarity score for considering two regions similar
+REGION_SIMILARITY_THRESHOLD = 0.3 # Minimum similarity score for considering two regions similar
 WEIGHT_BY_AREA = True            # Whether to weight similarity scores by region areas
+
+# Orientation correction settings
+ORIENTATION_CORRECTION_ENABLED = True
+ORIENTATION_OUTPUT_FOLDER = os.path.join(OUTPUT_FOLDER, "oriented_images")
+ORIENTATION_PROGRESS_FILE = os.path.join(OUTPUT_FOLDER, "orientation_progress.json")
