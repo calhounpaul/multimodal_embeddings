@@ -1,7 +1,6 @@
 HF_TOKEN.txt
 venv/
 newspaper_process.log
-output/
 db/
 *.log
 *.pyc
