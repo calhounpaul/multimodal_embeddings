@@ -56,4 +56,15 @@ fi
 
 # Run the main script
 echo "Running newspaper image analysis..."
-venv/bin/python3 complete_workflow.py "$@"
+
+venv/bin/python3 0_orientation.py newspaper_images 0_oriented_images
+
+venv/bin/python3 1_doclayout_bboxes.py --input_folder 0_oriented_images --output_folder 1_doclayout_parsed
+
+venv/bin/python3 2_edge_box_filter.py --input_folder 1_doclayout_parsed --output_folder 2_edge_box_filtered
+
+venv/bin/python3 3_combine_grids.py --input_folder 2_edge_box_filtered --output_folder 3_combined_bboxes
+
+venv/bin/python3 4_extract_median_widths.py --input_folder 3_combined_bboxes/json --output_folder 4_medians_extracted
+
+venv/bin/python3 5_detect_column_centers.py --input_folder 3_combined_bboxes/json --median_folder 4_medians_extracted/json --output_folder 5_column_detection

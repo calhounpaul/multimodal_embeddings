@@ -1,0 +1,13 @@
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.34.0
+pillow
+chromadb
+tqdm
+opencv-python
+doclayout-yolo
+huggingface_hub>=0.21.0
+numpy
+scikit-learn
+pytesseract
+imutils

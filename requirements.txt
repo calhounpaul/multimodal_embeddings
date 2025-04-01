@@ -11,3 +11,4 @@ numpy
 scikit-learn
 pytesseract
 imutils
+ultralytics

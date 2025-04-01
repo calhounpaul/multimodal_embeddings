@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newspaper Image Clustering Results</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; max-width: 1200px; margin: 0 auto; }
+        h1, h2, h3 { color: #333; }
+        .section { margin-bottom: 40px; }
+        .cluster { background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .cluster-title { display: flex; justify-content: space-between; }
+        .cluster-cohesion { color: #666; }
+        .images { display: flex; flex-wrap: wrap; gap: 10px; }
+        .image-item { text-align: center; width: 200px; }
+        .image-item img { max-width: 100%; height: auto; border: 1px solid #ddd; }
+        .visualization { margin-top: 20px; text-align: center; }
+        .visualization img { max-width: 100%; border: 1px solid #ddd; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .highlight { background-color: #fffacd; }
+        .stats { background-color: #e8f4f8; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Newspaper Image Clustering Results</h1>
+    <div class="section">
+        <p>This report shows clustering of newspaper images based on semantic similarity of their regions, weighted by region size.</p>
+        <p>Number of newspapers analyzed: 19</p>
+        <p>Number of clusters: 10</p>
+        <p>Generated on: 2025-03-03 01:39:27</p>
+    </div>
+    
+    <div class="stats">
+        <h2>Similarity Statistics</h2>
+        <p>Non-zero similarity pairs: 152</p>
+        <p>Average non-zero similarity: 0.1915</p>
+        <p>Max similarity between different images: 1.0000</p>
+    </div>
+    
+    <div class="section">
+        <h2>Visualizations</h2>
+        
+        <h3>Similarity Heatmap</h3>
+        <div class="visualization">
+            <img src="images/similarity_heatmap.png" alt="Similarity Heatmap">
+            <p>Heatmap showing pairwise similarities between newspaper images, based on weighted region comparisons.</p>
+        </div>
+        
+        <h3>Hierarchical Clustering Dendrogram</h3>
+        <div class="visualization">
+            <img src="images/clustering_dendrogram.png" alt="Clustering Dendrogram">
+            <p>Dendrogram showing hierarchical clustering of newspapers. Newspapers that are more similar appear closer together.</p>
+        </div>
+        
+        <h3>Similarity Network</h3>
+        <div class="visualization">
+            <img src="images/similarity_network.png" alt="Similarity Network">
+            <p>Network graph showing relationships between newspapers. Connected newspapers have significant region similarity.</p>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Clusters</h2>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 7</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 9</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Aberdeen MS Aberdeen Weekly 1920 07-02_0010.pdf_a8c7630f9a_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 0</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 8 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Chicago IL Draugas 1978 00284_1.pdf_272a4fdf55_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Lafayette GA Walker County Messenger 1947 Apr-Jun 1949 - 0873.pdf_c393330fca_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Louisa KY Big Sandy News 1918-08-16_3.pdf_479975d158_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 5</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Addision NY Advertiser 1883-1887 - 0001.pdf_387d113864_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 4</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Atlanta GA Atlanta Georgian And News 1907 03 16 e_4.pdf_f31f9fd5bb_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 2</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 3 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                </tr>
+
+                <tr>
+                    <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 8</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Lackawanna NY Leader 1951-1953 - 0203.pdf_88f8361e28_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 3</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Lafayette GA Walker County Messenger 1961 Oct-May 1963 - 1211.pdf_f50bd4e0f5_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 6</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+        <div class="cluster">
+            <div class="cluster-title">
+                <h3>Cluster 1</h3>
+                <span class="cluster-cohesion">Cohesion: 0.000</span>
+            </div>
+            <p>Contains 1 newspapers.</p>
+            <table>
+                <tr>
+                    <th>Newspaper</th>
+                </tr>
+
+                <tr>
+                    <td>Louisville KY Daily Democrat 1864-12-02_1.pdf_a394512c56_page_0000.png</td>
+                </tr>
+
+            </table>
+        </div>
+
+    </div>
+    
+    <div class="section">
+        <h2>Top Similarities</h2>
+        <table>
+            <tr>
+                <th>Newspaper 1</th>
+                <th>Newspaper 2</th>
+                <th>Similarity</th>
+            </tr>
+
+            <tr class='highlight'>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>1.0000</td>
+            </tr>
+
+            <tr class='highlight'>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Louisville KY Daily Democrat 1864-12-02_1.pdf_a394512c56_page_0000.png</td>
+                <td>0.9906</td>
+            </tr>
+
+            <tr class='highlight'>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>0.7240</td>
+            </tr>
+
+            <tr class='highlight'>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 16 e_4.pdf_f31f9fd5bb_page_0000.png</td>
+                <td>0.5697</td>
+            </tr>
+
+            <tr class='highlight'>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.5118</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.3701</td>
+            </tr>
+
+            <tr>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>0.2768</td>
+            </tr>
+
+            <tr>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.2443</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Lackawanna NY Leader 1951-1953 - 0203.pdf_88f8361e28_page_0000.png</td>
+                <td>0.2042</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Addision NY Advertiser 1883-1887 - 0001.pdf_387d113864_page_0000.png</td>
+                <td>0.1847</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Aberdeen MS Aberdeen Weekly 1920 07-02_0010.pdf_a8c7630f9a_page_0000.png</td>
+                <td>0.1503</td>
+            </tr>
+
+            <tr>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>Lackawanna NY Leader 1951-1953 - 0203.pdf_88f8361e28_page_0000.png</td>
+                <td>0.1198</td>
+            </tr>
+
+            <tr>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0958</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>0.0874</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>0.0672</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>0.0619</td>
+            </tr>
+
+            <tr>
+                <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0602</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                <td>0.0567</td>
+            </tr>
+
+            <tr>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0482</td>
+            </tr>
+
+            <tr>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0454</td>
+            </tr>
+
+            <tr>
+                <td>Chicago IL Draugas 1978 00284_1.pdf_272a4fdf55_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0367</td>
+            </tr>
+
+            <tr>
+                <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0364</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>0.0328</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Louisa KY Big Sandy News 1918-08-16_3.pdf_479975d158_page_0000.png</td>
+                <td>0.0323</td>
+            </tr>
+
+            <tr>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0314</td>
+            </tr>
+
+            <tr>
+                <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0307</td>
+            </tr>
+
+            <tr>
+                <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0305</td>
+            </tr>
+
+            <tr>
+                <td>Chicago IL Draugas 1978 00284_1.pdf_272a4fdf55_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0282</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                <td>0.0281</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 16 e_4.pdf_f31f9fd5bb_page_0000.png</td>
+                <td>0.0273</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0249</td>
+            </tr>
+
+            <tr>
+                <td>Aberdeen MS Aberdeen Weekly 1920 07-02_0010.pdf_a8c7630f9a_page_0000.png</td>
+                <td>Fayetteville NY Weekly Recorder 1878 - 1881 - 0679.pdf_29a1386ada_page_0000.png</td>
+                <td>0.0247</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Chicago IL Draugas 1978 00284_1.pdf_272a4fdf55_page_0000.png</td>
+                <td>0.0244</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Louisville KY Daily Democrat 1864-12-02_1.pdf_a394512c56_page_0000.png</td>
+                <td>0.0235</td>
+            </tr>
+
+            <tr>
+                <td>1845 Plus mixed papers and dates 00104_1.pdf_30d626cc62_page_0000.png</td>
+                <td>Lafayette GA Walker County Messenger 1961 Oct-May 1963 - 1211.pdf_f50bd4e0f5_page_0000.png</td>
+                <td>0.0216</td>
+            </tr>
+
+            <tr>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>0.0215</td>
+            </tr>
+
+            <tr>
+                <td>Louisa KY Big Sandy News 1918-08-16_3.pdf_479975d158_page_0000.png</td>
+                <td>Louisville KY Daily Democrat 1864-12-02_1.pdf_a394512c56_page_0000.png</td>
+                <td>0.0210</td>
+            </tr>
+
+            <tr>
+                <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>0.0210</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>0.0194</td>
+            </tr>
+
+            <tr>
+                <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                <td>Louisa KY Big Sandy News 1918-08-16_3.pdf_479975d158_page_0000.png</td>
+                <td>0.0192</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0180</td>
+            </tr>
+
+            <tr>
+                <td>Dover DL Delawarean 1900 07_0151.pdf_0d52995bd9_page_0000.png</td>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>0.0175</td>
+            </tr>
+
+            <tr>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>Indianapolis IN News 1889 03-12_4.pdf_88e0cd7fe6_page_0000.png</td>
+                <td>0.0168</td>
+            </tr>
+
+            <tr>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>Louisville KY Daily Democrat 1864-12-02_1.pdf_a394512c56_page_0000.png</td>
+                <td>0.0167</td>
+            </tr>
+
+            <tr>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>Lackawanna NY Leader 1951-1953 - 0203.pdf_88f8361e28_page_0000.png</td>
+                <td>0.0162</td>
+            </tr>
+
+            <tr>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>Lake County MI Newspapers 1879-1920 (2214).pdf_ac7bc3a4b0_page_0000.png</td>
+                <td>0.0160</td>
+            </tr>
+
+            <tr>
+                <td>Albany NY Evening Atlas 1843 00155.pdf_231f04d82f_page_0000.png</td>
+                <td>Chicago IL Draugas 1980 00098_2.pdf_e7f7e5a65a_page_0000.png</td>
+                <td>0.0154</td>
+            </tr>
+
+            <tr>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 30 e_1.pdf_ac8c99ae53_page_0000.png</td>
+                <td>Chicago IL Draugas 1978 00284_1.pdf_272a4fdf55_page_0000.png</td>
+                <td>0.0151</td>
+            </tr>
+
+            <tr>
+                <td>Addision NY Advertiser 1883-1887 - 0001.pdf_387d113864_page_0000.png</td>
+                <td>Atlanta GA Atlanta Georgian And News 1907 03 16 e_4.pdf_f31f9fd5bb_page_0000.png</td>
+                <td>0.0151</td>
+            </tr>
+
+            <tr>
+                <td>Adair County KY News 1900-1908 (413).pdf_6bbfbff388_page_0000.png</td>
+                <td>Dover NJ Iron Era 1873 00188.pdf_57901e18d5_page_0000.png</td>
+                <td>0.0147</td>
+            </tr>
+
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>Similarity Matrix</h2>
+        <table>
+            <tr>
+                <th>Newspaper</th>
+<th>1845 Plus mixed...</th><th>Aberdeen MS Abe...</th><th>Adair County KY...</th><th>Addision NY Adv...</th><th>Albany NY Eveni...</th><th>Atlanta GA Atla...</th><th>Atlanta GA Atla...</th><th>Chicago IL Drau...</th><th>Chicago IL Drau...</th><th>Dover DL Delawa...</th><th>Dover NJ Iron E...</th><th>Fayetteville NY...</th><th>Indianapolis IN...</th><th>Lackawanna NY L...</th><th>Lafayette GA Wa...</th><th>Lafayette GA Wa...</th><th>Lake County MI ...</th><th>Louisa KY Big S...</th><th>Louisville KY D...</th></tr><tr><td>1845 Plus mixed...</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.15);">0.150</td><td style="background-color: rgba(0, 100, 255, 0.09);">0.087</td><td style="background-color: rgba(0, 100, 255, 0.18);">0.185</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.062</td><td style="background-color: rgba(0, 100, 255, 0.57);">0.570</td><td style="background-color: rgba(0, 100, 255, 0.07);">0.067</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.024</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.057</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.028</td><td style="background-color: rgba(0, 100, 255, 0.72);">0.724</td><td style="background-color: rgba(0, 100, 255, 0.51);">0.512</td><td style="background-color: rgba(0, 100, 255, 1.00);">1.000</td><td style="background-color: rgba(0, 100, 255, 0.20);">0.204</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.022</td><td style="background-color: rgba(0, 100, 255, 0.37);">0.370</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.032</td><td style="background-color: rgba(0, 100, 255, 0.99);">0.991</td></tr><tr><td>Aberdeen MS Abe...</td><td style="background-color: rgba(0, 100, 255, 0.15);">0.150</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.025</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td></tr><tr><td>Adair County KY...</td><td style="background-color: rgba(0, 100, 255, 0.09);">0.087</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.019</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.027</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.025</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.033</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.018</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.023</td></tr><tr><td>Addision NY Adv...</td><td style="background-color: rgba(0, 100, 255, 0.18);">0.185</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td></tr><tr><td>Albany NY Eveni...</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.062</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.019</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.05);">0.045</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.022</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.016</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.016</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td></tr><tr><td>Atlanta GA Atla...</td><td style="background-color: rgba(0, 100, 255, 0.57);">0.570</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.027</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td></tr><tr><td>Atlanta GA Atla...</td><td style="background-color: rgba(0, 100, 255, 0.07);">0.067</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.05);">0.048</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.017</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.017</td></tr><tr><td>Chicago IL Drau...</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.024</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.028</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.04);">0.037</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td></tr><tr><td>Chicago IL Drau...</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.057</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.014</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.060</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.04);">0.036</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.019</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td></tr><tr><td>Dover DL Delawa...</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.028</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.018</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.021</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td></tr><tr><td>Dover NJ Iron E...</td><td style="background-color: rgba(0, 100, 255, 0.72);">0.724</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.015</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.018</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.24);">0.244</td><td style="background-color: rgba(0, 100, 255, 0.28);">0.277</td><td style="background-color: rgba(0, 100, 255, 0.12);">0.120</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.10);">0.096</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td></tr><tr><td>Fayetteville NY...</td><td style="background-color: rgba(0, 100, 255, 0.51);">0.512</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.025</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.025</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.05);">0.045</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.05);">0.048</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.028</td><td style="background-color: rgba(0, 100, 255, 0.06);">0.060</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.24);">0.244</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td></tr><tr><td>Indianapolis IN...</td><td style="background-color: rgba(0, 100, 255, 1.00);">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.033</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.022</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.017</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.021</td><td style="background-color: rgba(0, 100, 255, 0.28);">0.277</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td></tr><tr><td>Lackawanna NY L...</td><td style="background-color: rgba(0, 100, 255, 0.20);">0.204</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.016</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.12);">0.120</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td></tr><tr><td>Lafayette GA Wa...</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td></tr><tr><td>Lafayette GA Wa...</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.022</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.007</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.000</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td></tr><tr><td>Lake County MI ...</td><td style="background-color: rgba(0, 100, 255, 0.37);">0.370</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.018</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.016</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.04);">0.037</td><td style="background-color: rgba(0, 100, 255, 0.04);">0.036</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.031</td><td style="background-color: rgba(0, 100, 255, 0.10);">0.096</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.008</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td></tr><tr><td>Louisa KY Big S...</td><td style="background-color: rgba(0, 100, 255, 0.03);">0.032</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.013</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.019</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.012</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.005</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: #e6e6e6;">1.000</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.021</td></tr><tr><td>Louisville KY D...</td><td style="background-color: rgba(0, 100, 255, 0.99);">0.991</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.023</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.017</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.010</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.009</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.004</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.002</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.001</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.006</td><td style="background-color: rgba(0, 100, 255, 0.00);">0.003</td><td style="background-color: rgba(0, 100, 255, 0.01);">0.011</td><td style="background-color: rgba(0, 100, 255, 0.02);">0.021</td><td style="background-color: #e6e6e6;">1.000</td></tr>
+        </table>
+    </div>
+    
+</body>
+</html>
